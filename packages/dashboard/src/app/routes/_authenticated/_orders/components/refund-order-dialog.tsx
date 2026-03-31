@@ -26,9 +26,56 @@ import { AlertCircle } from 'lucide-react';
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import { uiConfig } from 'virtual:vendure-ui-config';
 
-import { useRefundOrder } from '../hooks/use-refund-order.js';
+import { RefundTarget, useRefundOrder } from '../hooks/use-refund-order.js';
 import { Order } from '../utils/order-types.js';
 import { getMaxRefundableQuantity, lineCanBeRefunded } from '../utils/order-utils.js';
+
+function RefundTargetRow({
+    target,
+    currencyCode,
+    toMajorUnits,
+    toMinorUnits,
+    onAmountChange,
+    onSelectedChange,
+}: {
+    target: RefundTarget;
+    currencyCode: string;
+    toMajorUnits: (value: number) => number;
+    toMinorUnits: (value: number) => number;
+    onAmountChange: (targetId: string, amount: number, selected?: boolean) => void;
+    onSelectedChange: (targetId: string, selected: boolean) => void;
+}) {
+    return (
+        <div className="border rounded-md p-3" data-testid={`refund-target-${target.type === 'destination' ? target.destinationCode : target.id}`}>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={target.selected}
+                        onCheckedChange={checked => onSelectedChange(target.id, !!checked)}
+                    />
+                    <div className="font-medium">{target.label}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Label className="text-sm">
+                        <Trans>Amount</Trans>:
+                    </Label>
+                    <Input
+                        type="number"
+                        step="0.01"
+                        value={target.amountToRefund ? toMajorUnits(target.amountToRefund) : ''}
+                        placeholder="0"
+                        onChange={e => {
+                            const amount = toMinorUnits(Number.parseFloat(e.target.value) || 0);
+                            onAmountChange(target.id, amount, amount > 0);
+                        }}
+                        className="w-24"
+                    />
+                    <span className="text-muted-foreground text-sm">{currencyCode}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 interface RefundOrderDialogProps {
     readonly order: Order;
@@ -287,75 +334,69 @@ export const RefundOrderDialog = forwardRef<RefundOrderDialogRef, RefundOrderDia
                             </div>
                         </div>
 
-                        {/* Refund Targets — unified list of payments + destinations */}
+                        {/* Payment methods */}
                         <div className="space-y-2">
                             <Label className="text-base font-medium">
-                                <Trans>Refund to</Trans>
+                                <Trans>Payment methods</Trans>
                             </Label>
                             <div className="space-y-3">
-                                {refund.refundTargets.map(target => (
-                                    <div key={target.id} className="border rounded-md p-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Checkbox
-                                                    checked={target.selected}
-                                                    onCheckedChange={checked =>
-                                                        refund.onTargetSelected(target.id, !!checked)
-                                                    }
-                                                />
-                                                <div>
-                                                    <div className="font-medium">
-                                                        {target.label}
-                                                        {target.type === 'payment' && (
-                                                            <span className="ml-2 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                                                <Trans>Original payment</Trans>
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Label className="text-sm">
-                                                    <Trans>Amount</Trans>:
-                                                </Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    value={target.amountToRefund ? toMajorUnits(target.amountToRefund) : ''}
-                                                    placeholder="0"
-                                                    onChange={e => {
-                                                        const amount = toMinorUnits(Number.parseFloat(e.target.value) || 0);
-                                                        refund.onTargetAmountChange(target.id, amount, amount > 0 ? true : undefined);
-                                                    }}
-                                                    className="w-24"
-                                                />
-                                                <span className="text-muted-foreground text-sm">
-                                                    {order.currencyCode}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                {refund.refundTargets
+                                    .filter(rt => rt.type === 'payment')
+                                    .map(target => (
+                                        <RefundTargetRow
+                                            key={target.id}
+                                            target={target}
+                                            currencyCode={order.currencyCode}
+                                            toMajorUnits={toMajorUnits}
+                                            toMinorUnits={toMinorUnits}
+                                            onAmountChange={refund.onTargetAmountChange}
+                                            onSelectedChange={refund.onTargetSelected}
+                                        />
+                                    ))}
                             </div>
-
-                            {/* Allocation summary */}
-                            {refund.refundTotal > 0 && (
-                                <div className={`text-sm flex justify-between px-1 ${remaining === 0 ? 'text-muted-foreground' : 'text-destructive font-medium'}`}>
-                                    <span>
-                                        <Trans>Allocated</Trans>:{' '}
-                                        {formatCurrency(refund.amountToRefundTotal, order.currencyCode)}
-                                        {' / '}
-                                        {formatCurrency(refund.refundTotal, order.currencyCode)}
-                                    </span>
-                                    {remaining !== 0 && (
-                                        <span>
-                                            <Trans>Remaining</Trans>:{' '}
-                                            {formatCurrency(remaining, order.currencyCode)}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
                         </div>
+
+                        {/* Refund destinations */}
+                        {refund.refundTargets.some(rt => rt.type === 'destination') && (
+                            <div className="space-y-2">
+                                <Label className="text-base font-medium">
+                                    <Trans>Other refund destinations</Trans>
+                                </Label>
+                                <div className="space-y-3">
+                                    {refund.refundTargets
+                                        .filter(rt => rt.type === 'destination')
+                                        .map(target => (
+                                            <RefundTargetRow
+                                                key={target.id}
+                                                target={target}
+                                                currencyCode={order.currencyCode}
+                                                toMajorUnits={toMajorUnits}
+                                                toMinorUnits={toMinorUnits}
+                                                onAmountChange={refund.onTargetAmountChange}
+                                                onSelectedChange={refund.onTargetSelected}
+                                            />
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Allocation summary */}
+                        {refund.refundTotal > 0 && (
+                            <div className={`text-sm flex justify-between px-1 ${remaining === 0 ? 'text-muted-foreground' : 'text-destructive font-medium'}`}>
+                                <span>
+                                    <Trans>Allocated</Trans>:{' '}
+                                    {formatCurrency(refund.amountToRefundTotal, order.currencyCode)}
+                                    {' / '}
+                                    {formatCurrency(refund.refundTotal, order.currencyCode)}
+                                </span>
+                                {remaining !== 0 && (
+                                    <span>
+                                        <Trans>Remaining</Trans>:{' '}
+                                        {formatCurrency(remaining, order.currencyCode)}
+                                    </span>
+                                )}
+                            </div>
+                        )}
 
                         {/* Validation Errors */}
                         {refund.validationErrors.length > 0 && (

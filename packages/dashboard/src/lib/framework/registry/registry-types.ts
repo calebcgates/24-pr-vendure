@@ -4,7 +4,6 @@ import {
     DashboardHistoryEntryComponent,
     DashboardLoginExtensions,
     DashboardPageBlockDefinition,
-    DashboardRefundDestinationDefinition,
     DashboardToolbarItemDefinition,
     DashboardWidgetDefinition,
 } from '@/vdb/framework/extension-api/types/index.js';
@@ -33,5 +32,4 @@ export interface GlobalRegistryContents {
     historyEntries: Map<string, DashboardHistoryEntryComponent['component']>;
     navMenuModifiers: Array<(config: NavMenuConfig) => NavMenuConfig>;
     dashboardToolbarItemRegistry: Map<string, DashboardToolbarItemDefinition>;
-    refundDestinationRegistry: DashboardRefundDestinationDefinition[];
 }

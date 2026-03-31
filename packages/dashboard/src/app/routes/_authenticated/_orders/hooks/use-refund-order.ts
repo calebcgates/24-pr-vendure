@@ -150,10 +150,10 @@ export function useRefundOrder(order: Order, onSuccess?: () => void): UseRefundO
         setRefundTargets(buildRefundTargets());
     }, [order, buildRefundTargets]);
 
-    // Rebuild targets when destinations load
+    // Rebuild targets when destinations load or payments change
     useEffect(() => {
         setRefundTargets(buildRefundTargets());
-    }, [destinationsQuery.data]);
+    }, [buildRefundTargets]);
 
     const totalRefundableAmount = useMemo(() => {
         // Only payments have a finite max
@@ -317,6 +317,7 @@ export function useRefundOrder(order: Order, onSuccess?: () => void): UseRefundO
         return errors;
     }, [
         refundTotal,
+        manuallySetRefundTotal,
         totalRefundableAmount,
         amountToRefundTotal,
         reason,

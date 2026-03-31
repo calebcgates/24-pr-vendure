@@ -1,16 +1,18 @@
 /* eslint-disable no-console */
+import { OnApplicationBootstrap } from '@nestjs/common';
 import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import { AssetServerPlugin } from '@vendure/asset-server-plugin';
 import { ADMIN_API_PATH, API_PORT, SHOP_API_PATH } from '@vendure/common/lib/shared-constants';
-import { OnApplicationBootstrap } from '@nestjs/common';
 import {
     DefaultJobQueuePlugin,
     DefaultLogger,
     DefaultSchedulerPlugin,
     DefaultSearchPlugin,
     dummyPaymentHandler,
+    LanguageCode,
     LogLevel,
     PluginCommonModule,
+    RefundDestinationStrategy,
     RequestContextService,
     SettingsStoreScopes,
     SettingsStoreService,
@@ -24,11 +26,29 @@ import { TelemetryPlugin } from '@vendure/telemetry-plugin';
 import 'dotenv/config';
 import path from 'path';
 import { DataSourceOptions } from 'typeorm';
-import { NavModifierPlugin } from './test-plugins/nav-modifier-plugin/nav-modifier-plugin';
 import { FieldTestPlugin } from './test-plugins/field-test/field-test-plugin';
+import { NavModifierPlugin } from './test-plugins/nav-modifier-plugin/nav-modifier-plugin';
 import { ReviewsPlugin } from './test-plugins/reviews/reviews-plugin';
 
 const IS_INSTRUMENTED = process.env.IS_INSTRUMENTED === 'true';
+
+class TestStoreCreditDestination implements RefundDestinationStrategy {
+    readonly code = 'store-credit';
+    readonly description = [{ languageCode: LanguageCode.en, value: 'Refund as store credit' }];
+
+    isAvailable() {
+        return true;
+    }
+
+    createRefund(_ctx: any, _input: any, amount: number, order: any) {
+        console.log(`[StoreCreditDestination] Issuing ${amount} store credit for order ${order.code}`);
+        return {
+            state: 'Settled' as const,
+            transactionId: `sc-${Date.now()}`,
+            metadata: { storeCreditAmount: amount },
+        };
+    }
+}
 
 @VendurePlugin({
     imports: [PluginCommonModule],
@@ -90,13 +110,14 @@ export const devConfig: VendureConfig = {
         },
     },
     dbConnectionOptions: {
-        synchronize: false,
+        synchronize: true,
         logging: false,
         migrations: [path.join(__dirname, 'migrations/*.ts')],
         ...getDbConfig(),
     },
     paymentOptions: {
         paymentMethodHandlers: [dummyPaymentHandler],
+        refundDestinations: [new TestStoreCreditDestination()],
     },
     settingsStoreFields: {
         MyPlugin: [

@@ -638,6 +638,14 @@ export class OrderModifier {
             recalculateShipping: input.options?.recalculateShipping,
         });
         await this.promotionService.runPromotionSideEffects(ctx, order, activePromotionsPre);
+        // Set orderPlacedQuantity for lines added via modification.
+        // Normally this is set during the order state transition, but
+        // modifications don't re-trigger that transition.
+        for (const line of order.lines) {
+            if (line.orderPlacedQuantity === 0 && line.quantity > 0) {
+                line.orderPlacedQuantity = line.quantity;
+            }
+        }
         await this.connection.getRepository(ctx, OrderLine).save(order.lines, { reload: false });
         const orderCustomFields = (input as any).customFields;
         if (orderCustomFields) {

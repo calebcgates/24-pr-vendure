@@ -10,7 +10,11 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { VENDURE_PORT } from './constants.js';
-import { e2eCustomFields, e2ePaymentMethodHandlers } from './fixtures/e2e-shared-config.js';
+import {
+    e2eCustomFields,
+    e2ePaymentMethodHandlers,
+    e2eRefundDestinations,
+} from './fixtures/e2e-shared-config.js';
 import { initialData } from './fixtures/initial-data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +58,7 @@ export default async function globalSetup() {
         },
         paymentOptions: {
             paymentMethodHandlers: e2ePaymentMethodHandlers,
+            refundDestinations: e2eRefundDestinations,
         },
         plugins: [CustomHistoryEntryPlugin],
         customFields: e2eCustomFields,

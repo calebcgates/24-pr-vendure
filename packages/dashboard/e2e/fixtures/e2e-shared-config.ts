@@ -1,4 +1,4 @@
-import { CustomFields, dummyPaymentHandler, LanguageCode } from '@vendure/core';
+import { CustomFields, dummyPaymentHandler, LanguageCode, RefundDestinationStrategy } from '@vendure/core';
 
 /**
  * Custom fields and payment handlers used by global-setup.ts to configure
@@ -139,3 +139,22 @@ export const e2eCustomFields: CustomFields = {
 };
 
 export const e2ePaymentMethodHandlers = [dummyPaymentHandler];
+
+class TestStoreCreditDestination implements RefundDestinationStrategy {
+    readonly code = 'store-credit';
+    readonly description = [{ languageCode: LanguageCode.en, value: 'Refund as store credit' }];
+
+    isAvailable() {
+        return true;
+    }
+
+    createRefund(_ctx: any, _input: any, amount: number) {
+        return {
+            state: 'Settled' as const,
+            transactionId: `sc-${Date.now()}`,
+            metadata: { storeCreditAmount: amount },
+        };
+    }
+}
+
+export const e2eRefundDestinations = [new TestStoreCreditDestination()];
