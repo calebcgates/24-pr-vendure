@@ -13,6 +13,12 @@ import { CreateRefundResult } from './payment-method-handler';
  * The default destination is the original payment method, but plugins can add additional
  * destinations such as store credit, gift cards, or vouchers.
  *
+ * When a non-default destination is selected, this strategy's `createRefund()` method
+ * is called **instead of** the `PaymentMethodHandler.createRefund()`. If your destination
+ * shares logic with an existing payment method handler (e.g. both a store-credit payment
+ * handler and a store-credit refund destination need to call the same API), extract the
+ * shared logic into a service and inject it into both.
+ *
  * @example
  * ```ts
  * class StoreCreditRefundDestination implements RefundDestinationStrategy {

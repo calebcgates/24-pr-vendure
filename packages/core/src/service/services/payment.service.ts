@@ -311,11 +311,14 @@ export class PaymentService {
 
         const destinationStrategy = this.getRefundDestinationStrategy(input.destination);
         if (destinationStrategy) {
+            // We only check isAvailable against the selected payment. If the refund
+            // spills over into other payments (in the loop below), we trust that the
+            // destination is still valid since the admin explicitly chose it.
             const isAvailable = await destinationStrategy.isAvailable(ctx, order, selectedPayment);
             if (!isAvailable) {
-                throw new UserInputError(
-                    `Refund destination "${destinationStrategy.code}" is not available for this order/payment`,
-                );
+                throw new UserInputError('error.refund-destination-not-available', {
+                    destination: destinationStrategy.code,
+                });
             }
         }
 

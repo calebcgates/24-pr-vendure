@@ -40,6 +40,7 @@ export class ConfigModule implements OnApplicationBootstrap, OnApplicationShutdo
 
     private validateRefundDestinations() {
         const refundDestinations = this.configService.paymentOptions.refundDestinations ?? [];
+        const seen = new Set<string>();
         for (const strategy of refundDestinations) {
             if (strategy.code === DEFAULT_REFUND_DESTINATION_CODE) {
                 throw new Error(
@@ -47,6 +48,12 @@ export class ConfigModule implements OnApplicationBootstrap, OnApplicationShutdo
                         `for the built-in default destination. Please use a different code for your strategy.`,
                 );
             }
+            if (seen.has(strategy.code)) {
+                throw new Error(
+                    `Duplicate RefundDestinationStrategy code "${strategy.code}". Each strategy must have a unique code.`,
+                );
+            }
+            seen.add(strategy.code);
         }
     }
 
