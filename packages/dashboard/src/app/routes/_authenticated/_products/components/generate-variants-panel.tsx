@@ -7,7 +7,7 @@ import { Input } from '@/vdb/components/ui/input.js';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/vdb/components/ui/table.js';
 import { api } from '@/vdb/graphql/api.js';
 import { useChannel } from '@/vdb/hooks/use-channel.js';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { z, zodResolver } from '@/vdb/lib/zod.js';
 import { Trans, useLingui } from '@lingui/react/macro';
 import { useMutation } from '@tanstack/react-query';
 import { Save } from 'lucide-react';
@@ -15,7 +15,6 @@ import { useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Form } from '@/vdb/components/ui/form.js';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { createProductVariantsDocument } from '../products.graphql.js';
 
 interface OptionGroup {
@@ -38,7 +37,7 @@ interface GeneratedVariant {
 
 const variantSchema = z
     .object({
-        enabled: z.boolean().default(true),
+        enabled: z.boolean(),
         sku: z.string(),
         price: z.string(),
         stock: z.string(),
