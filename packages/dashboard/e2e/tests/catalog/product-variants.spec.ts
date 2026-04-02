@@ -102,25 +102,67 @@ test.describe('product variant generation', () => {
         await expect(skuInputs).toHaveCount(3);
     });
 
-    test('should generate variants by filling in the form and submitting', async ({ page }) => {
+    // #4608 — unchecked variant rows should not trigger validation errors
+    test('should not validate unchecked variant rows', async ({ page }) => {
         await page.goto(`/products/${productId}`);
         await expect(page.getByRole('heading', { name: 'E2E Variant Test Product' })).toBeVisible({
             timeout: 10_000,
         });
 
-        // Fill in SKU and stock for each variant row
+        const table = page.locator('table');
+        const rows = table.locator('tbody tr');
+
+        // Uncheck Medium (row 1) and Large (row 2), leave only Small (row 0) checked
+        await rows.nth(1).getByRole('checkbox').click();
+        await rows.nth(2).getByRole('checkbox').click();
+
+        // Fill in only the first row (Small)
         const skuInputs = page.getByTestId('variant-sku-input');
         await skuInputs.nth(0).fill('EVTP-SM');
-        await skuInputs.nth(1).fill('EVTP-MD');
-        await skuInputs.nth(2).fill('EVTP-LG');
-
         const stockInputs = page.getByTestId('variant-stock-input');
         await stockInputs.nth(0).fill('10');
-        await stockInputs.nth(1).fill('10');
-        await stockInputs.nth(2).fill('10');
 
-        // Click "Create 3 variants"
-        await page.getByRole('button', { name: /Create 3 variants/i }).click();
+        // Button should say "Create 1 variant"
+        await expect(page.getByRole('button', { name: /Create 1 variant/i })).toBeVisible();
+
+        // Click Create — should NOT show validation errors on unchecked rows
+        await page.getByRole('button', { name: /Create 1 variant/i }).click();
+
+        // Wait for success toast — proves form submitted without validation blocking it
+        await expect(
+            page
+                .locator('[data-sonner-toast]')
+                .filter({ hasText: /created/i })
+                .first(),
+        ).toBeVisible({ timeout: 10_000 });
+
+        // Verify no validation errors appeared on the unchecked rows (role="alert" is the ARIA role for field errors)
+        await expect(rows.nth(1).getByRole('alert')).toHaveCount(0);
+        await expect(rows.nth(2).getByRole('alert')).toHaveCount(0);
+    });
+
+    test('should generate remaining variants by filling in the form and submitting', async ({ page }) => {
+        await page.goto(`/products/${productId}`);
+        await expect(page.getByRole('heading', { name: 'E2E Variant Test Product' })).toBeVisible({
+            timeout: 10_000,
+        });
+
+        // After previous test created only Small, the panel should now show
+        // only the remaining uncreated variants (Medium, Large)
+        const skuInputs = page.getByTestId('variant-sku-input');
+        const count = await skuInputs.count();
+
+        // Fill in SKU and stock for all remaining variant rows
+        for (let i = 0; i < count; i++) {
+            await skuInputs.nth(i).fill(`EVTP-REMAINING-${i}`);
+        }
+        const stockInputs = page.getByTestId('variant-stock-input');
+        for (let i = 0; i < count; i++) {
+            await stockInputs.nth(i).fill('10');
+        }
+
+        // Click the create button
+        await page.getByRole('button', { name: /Create \d+ variants?/i }).click();
 
         // Wait for success toast
         await expect(

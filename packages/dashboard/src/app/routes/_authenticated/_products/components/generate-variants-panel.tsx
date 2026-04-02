@@ -52,14 +52,15 @@ const variantSchema = z
                 path: ['sku'],
             });
         }
-        if (isNaN(Number(data.price)) || Number(data.price) < 0) {
+        if (data.price !== '' && (isNaN(Number(data.price)) || Number(data.price) < 0)) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: 'Price must be a positive number',
+                message: 'Price must be a non-negative number',
                 path: ['price'],
             });
         }
-        if (isNaN(Number(data.stock)) || parseInt(data.stock, 10) < 0) {
+        const stockNum = Number(data.stock);
+        if (data.stock !== '' && (isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum))) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
                 message: 'Stock must be a non-negative integer',
