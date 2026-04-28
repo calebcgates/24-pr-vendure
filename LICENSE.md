@@ -29,6 +29,12 @@ Additional permission under GNU GPL version 3 section 7:
 An additional exception under section 7 of the GPL is included in the plugin-exception.txt file,
 which allows you to distribute Vendure plugins (i.e. extensions) under a different license.
 
+Additional term under GNU GPL version 3 section 7(b):
+
+An additional term under section 7(b) of the GPL is included in the attribution-clause.txt file,
+which requires preservation of specified Vendure attribution notices in the Dashboard user
+interface (login screen and sidebar user menu).
+
 ## Vendure Commercial License (VCL)
 
 Alternatively, commercial and supported versions of the program - also known as
@@ -40,3 +46,4 @@ Please see also:
 
 - [Licensing FAQ - license-faq.md](license/license-faq.md)
 - [GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 - gpl-3.0.txt](license/gpl-3.0.txt)
+- [Vendure Attribution Clause - attribution-clause.txt](license/attribution-clause.txt)

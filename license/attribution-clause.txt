@@ -1,0 +1,49 @@
+Vendure Attribution Clause
+
+0. Definitions
+
+"Vendure Core" includes all the source code files included in this repository, which are licensed
+under the GPL v3.0 license.
+
+The "Dashboard" means the administrative user interface bundled with Vendure Core, including any
+work derived from it.
+
+"Appropriate Legal Notices" has the meaning given in Section 5 of the GNU General Public License
+version 3, and includes the visual notices identified in Section 1 below.
+
+1. Required Attribution Notices
+
+When you distribute, make available, or operate the Software (including any modified version of
+the Dashboard) such that users interact with the Dashboard through a graphical user interface,
+you must preserve the following Appropriate Legal Notices in their original form, location, and
+visibility:
+
+  a) The "Vendure" wordmark and logo, together with the version number of the Software, as
+     displayed on the Dashboard login screen.
+
+  b) The "Vendure" wordmark and logo, together with the version number of the Software, as
+     displayed in the Dashboard sidebar user menu.
+
+These notices must remain:
+
+  - visible to every interactive user of the Dashboard,
+  - legible and no smaller, less contrasted, or less prominent than in the unmodified Software,
+  - unaltered in wording, imagery, and link target (where applicable).
+
+2. Co-branding Permitted
+
+You may add your own branding, logos, product names, and notices alongside the required notices,
+provided the required notices remain clearly visible and are not obscured, replaced, cropped, or
+rendered less prominent.
+
+3. Grant of Additional Term
+
+In accordance with Section 7(b) of the GNU General Public License version 3, Vendure GmbH adds
+the requirements in Sections 1 and 2 above as additional terms applicable to the Software.
+
+Removing, hiding, replacing, or diminishing the prominence of the notices identified in
+Section 1 constitutes a violation of this license, and your rights under the GPL v3.0 will
+terminate automatically as provided in Section 8 of the GPL v3.0.
+
+(The GPL v3.0 restrictions continue to apply in all other respects; this clause adds to, and
+does not replace, those terms.)
